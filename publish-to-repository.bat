@@ -1,5 +1,5 @@
 @echo off
-setlocal EnableExtensions
+setlocal EnableExtensions EnableDelayedExpansion
 cd /d "%~dp0"
 title Publish Subrata Portfolio
 
@@ -46,7 +46,7 @@ if errorlevel 1 (
   git diff --cached --stat
   echo.
   set /p "CONFIRM_COMMIT=Commit these changes? (Y/N): "
-  if /i not "%CONFIRM_COMMIT%"=="Y" (
+  if /i not "!CONFIRM_COMMIT!"=="Y" (
     echo Cancelled. Staged files remain available in Git.
     pause
     exit /b 0
