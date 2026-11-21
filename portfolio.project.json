@@ -1,0 +1,14 @@
+{
+  "name": "Subrata Graphic Designer Portfolio",
+  "entry": "index.html",
+  "styles": "styles.css",
+  "scripts": "script.js",
+  "type": "static-site",
+  "editable": true,
+  "assets": {
+    "facebook": "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/facebook.svg",
+    "twitter": "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/twitter.svg",
+    "wechat": "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/wechat.svg",
+    "email": "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/envelope.svg"
+  }
+}
