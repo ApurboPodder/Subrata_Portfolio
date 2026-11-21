@@ -100,3 +100,6 @@ html,body{overscroll-behavior-y:none}
 
 /* Keep the sticky category bar below a card that is actively animating. */
 .projects-head{z-index:4}
+
+/* Hide the decorative portrait number badge. */
+.portrait-mark{display:none!important}
