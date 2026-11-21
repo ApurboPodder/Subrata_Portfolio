@@ -8,7 +8,7 @@ Create a Supabase project. In Project Settings > API, copy the Project URL and t
 
 ## 2. Create database, policies, bucket, and sample projects
 
-Open SQL Editor in the Supabase Dashboard and run supabase/setup.sql.
+Open SQL Editor in the Supabase Dashboard and run supabase/setup.sql. If the portfolio database was already set up, also run supabase/site-images.sql once to add the editable About portrait and Home cover settings.
 
 ## 3. Create your Studio user
 
