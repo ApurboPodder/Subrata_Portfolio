@@ -106,3 +106,6 @@ html,body{overscroll-behavior-y:none}
 
 /* Keep only the uploaded Home cover; no generated artwork fallback. */
 .hero-art{background:#273047!important;background-image:none!important}.hero-art.has-cover{background-image:linear-gradient(180deg,#10101d55 0%,#10101d16 45%,#10101d63 100%),var(--hero-cover-image)!important}
+
+/* Center the uploaded Home cover in the hero. */
+.hero-art.has-cover{background-position:50% 50%!important}
