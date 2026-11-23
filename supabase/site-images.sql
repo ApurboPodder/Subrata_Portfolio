@@ -5,8 +5,10 @@ create table if not exists public.portfolio_settings (
   id boolean primary key default true check (id),
   portrait_path text,
   hero_cover_path text,
+  show_all_work boolean not null default true,
   updated_at timestamptz not null default now()
 );
+alter table public.portfolio_settings add column if not exists show_all_work boolean not null default true;
 insert into public.portfolio_settings (id) values (true)
 on conflict (id) do nothing;
 alter table public.portfolio_settings enable row level security;
