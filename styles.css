@@ -141,3 +141,6 @@ html,body{overscroll-behavior-y:none}
 @media(max-width:600px){.storybook-gallery-view{padding:24px 16px 36px}.storybook-page-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.storybook-page-card{padding:6px}.storybook-page-card img{height:190px}.storybook-page-head{left:14px;right:64px;top:14px;gap:8px;align-items:flex-start;flex-direction:column}.storybook-page-head .mono{font-size:9px}.storybook-page-nav{padding:12px;font-size:0}.storybook-page-nav span{font-size:0}.storybook-page-prev{left:8px}.storybook-page-next{right:8px}}
 
 .storybook-card-title{padding-top:8px;font:500 16px "Space Grotesk";letter-spacing:-.03em;color:var(--ink)}.storybook-empty{grid-column:1/-1;color:#b9b8bd;font-size:13px;padding:28px 0}
+
+/* Always scale project images to fit the viewer without cropping. */
+.modal.project-mode .project-preview img,.storybook-full-page{display:block;width:100%!important;height:100%!important;max-width:100vw!important;max-height:100vh!important;object-fit:contain!important}
