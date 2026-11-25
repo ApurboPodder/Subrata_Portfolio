@@ -111,9 +111,13 @@ create policy "Admins can delete portfolio covers" on storage.objects for delete
 create table if not exists public.portfolio_disciplines (
   id uuid primary key default gen_random_uuid(),
   name text not null unique check (char_length(trim(name)) between 1 and 40),
+  parent_id uuid references public.portfolio_disciplines(id) on delete restrict,
   sort_order integer not null default 0,
   created_at timestamptz not null default now()
 );
+alter table public.portfolio_disciplines
+  add column if not exists parent_id uuid references public.portfolio_disciplines(id) on delete restrict;
+notify pgrst, 'reload schema';
 create unique index if not exists portfolio_disciplines_name_lower_idx
   on public.portfolio_disciplines (lower(name));
 alter table public.portfolio_disciplines add column if not exists is_visible boolean not null default true;

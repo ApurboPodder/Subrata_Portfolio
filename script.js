@@ -79,3 +79,201 @@ let scrollFrame=false;window.addEventListener('scroll',()=>{if(!scrollFrame){scr
 
 
 const profilePictureDialog=document.getElementById('profilePictureDialog'),profilePictureLarge=document.getElementById('profilePictureLarge');if(heroAvatar&&profilePictureDialog&&profilePictureLarge){const openProfilePicture=()=>{profilePictureLarge.src=heroAvatar.currentSrc||heroAvatar.src;profilePictureDialog.showModal()};heroAvatar.addEventListener('click',openProfilePicture);heroAvatar.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();openProfilePicture()}});profilePictureDialog.addEventListener('click',event=>{if(event.target===profilePictureDialog)profilePictureDialog.close()})}
+
+function getDiscipline(name){return disciplines.find(discipline=>discipline.name===name)}
+function getParentDiscipline(discipline){return discipline&&discipline.parent_id?disciplines.find(parent=>parent.id===discipline.parent_id):null}
+function disciplineDisplayName(name){const discipline=getDiscipline(name),parent=getParentDiscipline(discipline);return parent?parent.name+' / '+name:name}
+function projectMatchesDiscipline(project,name){return project.kind===name}
+function getVisibleDisciplines(){const roots=disciplines.filter(discipline=>!discipline.parent_id&&discipline.is_visible!==false);return roots.flatMap(parent=>[parent,...disciplines.filter(child=>child.parent_id===parent.id&&child.is_visible!==false)])}
+let expandedDisciplineId=null,projectRenderId=0;
+function getVisibleParentDisciplines(){return disciplines.filter(discipline=>!discipline.parent_id&&discipline.is_visible!==false)}
+function loadVisibleProjectRatios(projects,renderId){
+  const pending=projects.map((project,index)=>({project,image:grid.querySelector('.card[data-index="'+index+'"] .art img')})).filter(item=>item.image&&item.project.aspectRatio===undefined);
+  if(!pending.length)return;
+  Promise.all(pending.map(({project,image})=>{
+    image.loading='eager';
+    return new Promise(resolve=>{
+      const measure=()=>{project.aspectRatio=image.naturalWidth&&image.naturalHeight?image.naturalWidth/image.naturalHeight:null;resolve()};
+      if(image.complete){measure();return}
+      image.addEventListener('load',measure,{once:true});image.addEventListener('error',measure,{once:true})
+    })
+  })).then(()=>{if(renderId===projectRenderId)render()})
+}
+
+render=function(direction=0){
+  const all=getAllProjects(),shown=all.filter(project=>active==='All'||projectMatchesDiscipline(project,active)).map((project,index)=>({project,index})).sort((left,right)=>{
+    const leftKnown=Number.isFinite(left.project.aspectRatio),rightKnown=Number.isFinite(right.project.aspectRatio);
+    if(leftKnown!==rightKnown)return leftKnown?-1:1;
+    return leftKnown?left.project.aspectRatio-right.project.aspectRatio||left.index-right.index:left.index-right.index
+  }).map(item=>item.project);
+  visibleProjects=shown;
+  const projectsToRender=shown.slice(0,visibleProjectLimit);
+  const renderId=++projectRenderId;
+  grid.innerHTML=projectsToRender.map((project,index)=>{
+    const discipline=getDiscipline(project.kind),isSubdiscipline=Boolean(getParentDiscipline(discipline));
+    const subdisciplineLabel=isSubdiscipline?'<div class="card-discipline-label">'+esc(project.kind)+'</div>':'';
+    const imageStyle=isSubdiscipline?'display:block;width:100%;height:auto;object-fit:contain':'display:block;width:100%;height:auto;object-fit:unset';
+    const storybook=isStoryBookProject(project);
+    return '<article class="card'+(String(project.kind||'').trim().toLowerCase()==='icon design'?' card-icon-design':'')+(isSubdiscipline?' card-subdiscipline':'')+'" role="button" tabindex="0" aria-label="Open project: '+esc(project.title)+'" data-index="'+index+'"><div class="art art-'+(project.art||'custom')+'">'+(project.image?'<img loading="lazy" decoding="async" src="'+esc(project.image)+'" data-original="'+esc(project.originalImage||project.image)+'" onerror="this.onerror=null;this.src=this.dataset.original" alt="" style="'+imageStyle+'">':(project.art&&project.art!=='custom'?art(project):'<div class="art-inner" style="font-size:76px">'+esc(project.icon||'✳')+'</div>'))+'</div>'+(storybook?'<div class="storybook-card-title">'+esc(project.title)+'</div>'+(project.hasStorybookGallery?'<div class="storybook-page-count">'+String(project.galleryImages.length)+' pages</div>':''):subdisciplineLabel)+'</article>'
+  }).join('');
+  loadVisibleProjectRatios(projectsToRender,renderId);
+  document.getElementById('projectCount').textContent='('+String(all.length).padStart(2,'0')+')';
+  const moreButton=document.getElementById('showMoreProjects'),remaining=shown.length-projectsToRender.length;
+  if(moreButton){moreButton.hidden=remaining<=0;moreButton.textContent='Show More'}
+  if(direction){grid.classList.remove('slide-next','slide-previous','slide-out-left','slide-out-right');void grid.offsetWidth;grid.classList.add(direction>0?'slide-next':'slide-previous')}
+};
+
+renderFilters=function(){
+  const container=document.querySelector('.filters');
+  if(!container)return;
+  const parents=getVisibleParentDisciplines(),allWorkVisible=portfolioSettings.show_all_work!==false;
+  if(active!=='All'&&!getVisibleDisciplines().some(discipline=>discipline.name===active))active=allWorkVisible?'All':(parents[0]?.name||'All');
+  const activeParent=parents.find(discipline=>discipline.name===active);
+  if(activeParent){
+    const firstChild=disciplines.find(discipline=>discipline.parent_id===activeParent.id&&discipline.is_visible!==false);
+    if(firstChild){active=firstChild.name;expandedDisciplineId=activeParent.id}
+  }
+  if(active==='All'&&!allWorkVisible&&parents.length){
+    const firstParent=parents[0],firstChild=disciplines.find(discipline=>discipline.parent_id===firstParent.id&&discipline.is_visible!==false);
+    if(firstChild){active=firstChild.name;expandedDisciplineId=firstParent.id}else active=firstParent.name
+  }
+  if(expandedDisciplineId&&!parents.some(discipline=>discipline.id===expandedDisciplineId))expandedDisciplineId=null;
+  if(!parents.some(discipline=>discipline.id===expandedDisciplineId))expandedDisciplineId=null;
+  const expandedParent=parents.find(discipline=>discipline.id===expandedDisciplineId);
+  const children=expandedParent?disciplines.filter(discipline=>discipline.parent_id===expandedParent.id&&discipline.is_visible!==false):[];
+  if(!children.length)expandedDisciplineId=null;
+  const rootChoices=[...(allWorkVisible?[{name:'All',label:'All work',hasChildren:false}]:[]),...parents.map(discipline=>({name:discipline.name,label:discipline.name,hasChildren:disciplines.some(child=>child.parent_id===discipline.id&&child.is_visible!==false),parentId:discipline.id}))];
+  if(!rootChoices.some(choice=>choice.name===active)&&!children.some(discipline=>discipline.name===active))active=rootChoices[0]?.name||'All';
+  const buttonMarkup=(choice,child)=>'<button type="button" class="filter'+(child?' filter-subdiscipline':'')+(active===choice.name?' active':'')+'" data-kind="'+esc(choice.name)+'"'+(choice.parentId?' data-parent-id="'+esc(choice.parentId)+'"':'')+(choice.hasChildren?' data-has-children="true" aria-expanded="'+String(expandedDisciplineId===choice.parentId)+'"':'')+'>'+esc(choice.label)+'</button>';
+  container.innerHTML='<div class="filter-level filter-level-primary" aria-label="Top-level disciplines">'+rootChoices.map(choice=>buttonMarkup(choice,false)).join('')+'</div>'+(expandedParent&&children.length?'<div class="filter-level filter-level-subdiscipline" aria-label="'+esc(expandedParent.name)+' sub-disciplines">'+children.map(discipline=>buttonMarkup({name:discipline.name,label:discipline.name,parentId:expandedParent.id},true)).join('')+'</div>':'');
+  container.onclick=event=>{
+    const button=event.target.closest('button[data-kind]');
+    if(!button)return;
+    const previousActive=active,previousIndex=[...container.querySelectorAll('button[data-kind]')].findIndex(item=>item.dataset.kind===previousActive);
+    const choice=getDiscipline(button.dataset.kind);
+    if(choice&&choice.parent_id){
+      active=choice.name;
+      expandedDisciplineId=choice.parent_id
+    }else if(choice){
+      const firstChild=disciplines.find(child=>child.parent_id===choice.id&&child.is_visible!==false);
+      if(firstChild){active=firstChild.name;expandedDisciplineId=choice.id}
+      else{active=choice.name;expandedDisciplineId=null}
+    }else{
+      active=button.dataset.kind;expandedDisciplineId=null
+    }
+    const sheet=document.querySelector('.work-sheet');
+    if(sheet){disciplineWaveShape=disciplineWaveShape%8+1;sheet.dataset.waveShape=String(disciplineWaveShape)}
+    visibleProjectLimit=PROJECTS_PER_PAGE;
+    const direction=previousActive===active?0:Math.sign([...container.querySelectorAll('button[data-kind]')].findIndex(item=>item.dataset.kind===active)-previousIndex);
+    renderFilters();
+    if(!direction){render();return}
+    const transitionId=++categoryTransition;
+    grid.classList.remove('slide-next','slide-previous','slide-out-left','slide-out-right');
+    void grid.offsetWidth;
+    grid.classList.add(direction>0?'slide-out-left':'slide-out-right');
+    grid.addEventListener('animationend',function finishExit(){if(transitionId!==categoryTransition)return;render(direction)},{once:true})
+  }
+};
+
+populateDisciplineSelect=function(selected){
+  const select=document.getElementById('pkind');
+  if(!select)return;
+  const wanted=selected||select.value,visible=getVisibleDisciplines();
+  select.innerHTML=visible.length?visible.map(discipline=>'<option value="'+esc(discipline.name)+'">'+esc(disciplineDisplayName(discipline.name))+'</option>').join(''):'<option value="">Show or add a discipline first</option>';
+  if(wanted&&visible.some(discipline=>discipline.name===wanted))select.value=wanted
+};
+
+renderStudioDisciplines=function(){
+  const box=document.getElementById('disciplineList');
+  if(!box)return;
+  const rows=[{id:'__all_work__',name:'All work',is_visible:portfolioSettings.show_all_work!==false,is_all_work:true},...disciplines.filter(discipline=>!discipline.parent_id).flatMap(parent=>[parent,...disciplines.filter(child=>child.parent_id===parent.id)])];
+  box.innerHTML=rows.map(discipline=>{
+    const parent=getParentDiscipline(discipline),label=parent?parent.name+' / '+discipline.name:discipline.name;
+    return '<div class="discipline-row '+(discipline.is_visible===false?'is-hidden':'')+(discipline.is_all_work?' all-work-row':'')+(parent?' subdiscipline-row':'')+'"><span class="discipline-name">'+esc(label)+'<small class="discipline-status">'+(discipline.is_visible===false?'Hidden from portfolio':'Visible on portfolio')+'</small></span><div class="discipline-actions"><button type="button" '+(discipline.is_all_work?'data-toggle-all-work':'data-toggle-discipline="'+esc(discipline.id)+'"')+' aria-label="'+(discipline.is_visible===false?'Show ':'Hide ')+esc(label)+'">'+(discipline.is_visible===false?'Show':'Hide')+'</button>'+(discipline.is_all_work?'':'<button type="button" data-delete-discipline="'+esc(discipline.id)+'">Delete</button>')+'</div></div>'
+  }).join('')||'<p class="discipline-empty">No disciplines yet. Add one above.</p>';
+  box.onclick=event=>{const allWork=event.target.closest('[data-toggle-all-work]');if(allWork){toggleAllWork();return}const toggle=event.target.closest('[data-toggle-discipline]');if(toggle){toggleDiscipline(toggle.dataset.toggleDiscipline);return}const remove=event.target.closest('[data-delete-discipline]');if(remove)deleteDiscipline(remove.dataset.deleteDiscipline)}
+};
+
+function syncDisciplineParentSelect(){
+  const select=document.getElementById('newDisciplineParent');
+  if(!select)return;
+  const selected=select.value;
+  select.innerHTML='<option value="">Top-level discipline</option>'+disciplines.filter(discipline=>!discipline.parent_id).map(discipline=>'<option value="'+esc(discipline.id)+'">'+esc(discipline.name)+'</option>').join('');
+  if(disciplines.some(discipline=>discipline.id===selected&&!discipline.parent_id))select.value=selected
+}
+
+const showStudioWithoutSubdisciplines=showStudio;
+showStudio=function(){
+  showStudioWithoutSubdisciplines();
+  const addRow=document.querySelector('.discipline-add'),addButton=document.getElementById('addDiscipline');
+  if(addRow&&!document.getElementById('newDisciplineParent')){
+    const parentSelect=document.createElement('select');
+    parentSelect.id='newDisciplineParent';
+    parentSelect.setAttribute('aria-label','Parent discipline (optional)');
+    parentSelect.innerHTML='<option value="">Top-level discipline</option>';
+    addRow.insertBefore(parentSelect,addButton);
+    parentSelect.onchange=()=>{addButton.textContent=parentSelect.value?'Add sub-discipline':'Add discipline'};
+  }
+  syncDisciplineParentSelect();
+  const help=document.querySelector('.discipline-manager>p');
+  if(help)help.textContent='Manage public filters. Add a top-level discipline or choose a parent to create a sub-discipline.';
+  renderStudioDisciplines()
+};
+
+loadDisciplines=async function(){
+  const{data,error}=await supabaseClient.from('portfolio_disciplines').select('id,name,parent_id,sort_order,is_visible').order('sort_order',{ascending:true}).order('name',{ascending:true});
+  if(error){toast('Could not load disciplines: '+error.message);return}
+  disciplines=data||[];
+  renderFilters();render();populateDisciplineSelect();renderStudioDisciplines();syncDisciplineParentSelect()
+};
+
+addDiscipline=async function(){
+  const input=document.getElementById('newDiscipline'),button=document.getElementById('addDiscipline'),parentSelect=document.getElementById('newDisciplineParent'),name=input.value.trim(),parentId=parentSelect&&parentSelect.value||null;
+  if(!name){toast('Enter a discipline name.');return}
+  if(name.length>40){toast('Discipline names must be 40 characters or fewer.');return}
+  if(disciplines.some(discipline=>discipline.name.toLowerCase()===name.toLowerCase())){toast('That discipline already exists.');return}
+  button.disabled=true;
+  try{
+    const siblings=disciplines.filter(discipline=>(discipline.parent_id||null)===parentId),sortOrder=Math.max(0,...siblings.map(discipline=>Number(discipline.sort_order)||0))+10;
+    const{error}=await supabaseClient.from('portfolio_disciplines').insert({name,parent_id:parentId,sort_order:sortOrder});
+    if(error)throw error;
+    input.value='';if(parentSelect){parentSelect.value='';button.textContent='Add discipline'}
+    await loadDisciplines();toast(parentId?'Sub-discipline added.':'Discipline added.')
+  }catch(error){toast(error.message||'Could not add the discipline.')}finally{button.disabled=false}
+};
+
+deleteDiscipline=async function(id){
+  const discipline=disciplines.find(item=>item.id===id);
+  if(!discipline||!confirm('Delete the “'+discipline.name+'” discipline?'))return;
+  if(!discipline.parent_id&&disciplines.some(item=>item.parent_id===id)){toast('Delete its sub-disciplines before deleting this discipline.');return}
+  const{count,error:countError}=await supabaseClient.from('projects').select('id',{count:'exact',head:true}).eq('category',discipline.name);
+  if(countError){toast(countError.message);return}
+  if(count){toast('Move the '+count+' project(s) in this discipline to another category before deleting it.');return}
+  const{error}=await supabaseClient.from('portfolio_disciplines').delete().eq('id',id);
+  if(error){toast(error.message);return}
+  if(active===discipline.name)active='All';
+  await loadDisciplines();toast('Discipline deleted.')
+};
+
+const showProjectWithoutSubdisciplines=showProject;
+showProject=function(project){
+  showProjectWithoutSubdisciplines(project);
+  const label=content.querySelector('.project-overlay-title .mono,.storybook-gallery-head .mono');
+  if(label)label.textContent=disciplineDisplayName(project.kind)
+};
+
+const studioListWithoutSubdisciplines=studioList;
+studioList=function(){
+  studioListWithoutSubdisciplines();
+  const box=document.getElementById('existing');
+  if(!box)return;
+  box.querySelectorAll('.manage-discipline>summary>span:first-child').forEach(label=>{label.textContent=disciplineDisplayName(label.textContent)});
+  box.querySelectorAll('.dash-project').forEach(row=>{
+    const project=getAllProjects().find(item=>item.id===row.querySelector('[data-edit-id]')?.dataset.editId);
+    const label=row.querySelector('.dash-project-info small');
+    if(project&&label)label.textContent=disciplineDisplayName(project.kind)
+  })
+};
+
+renderFilters();
+render();
