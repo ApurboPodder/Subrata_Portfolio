@@ -1,0 +1,10 @@
+{
+  "name": "Subrata — Editorial Graphic Design Portfolio",
+  "entry": "index.html",
+  "styles": "styles.css",
+  "scripts": "script.js",
+  "type": "static-site",
+  "editable": true,
+  "assets": "assets/",
+  "projectData": "projects.json"
+}
