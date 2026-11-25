@@ -220,3 +220,25 @@ html:not(.scrolled) .hero-copy,html:not(.scrolled) .hero-copy h1,html:not(.scrol
 
 /* Keep the pinned mobile name clear of the fixed login control. */
 @media(max-width:700px){.hero-pinned .hero-title{top:12px!important;left:16px!important;max-width:calc(100vw - 156px);font-size:20px!important;line-height:1!important;letter-spacing:-.06em!important;white-space:nowrap}.hero-pinned .hero-title-avatar{width:48px!important;height:48px!important;margin-right:8px!important}}
+
+
+/* Scale the pinned name, portrait, and navigation control in step on narrow screens. */
+@media(max-width:700px){.hero-pinned .hero-title{font-size:clamp(16px,5.13vw,20px)!important;max-width:calc(100vw - 40px);gap:0}.hero-pinned .hero-title-avatar{width:clamp(39px,12.31vw,48px)!important;height:clamp(39px,12.31vw,48px)!important;margin-right:clamp(6px,2.05vw,8px)!important}.top .nav{gap:clamp(8px,2.82vw,11px)}.top .nav .login{font-size:clamp(8px,2.56vw,10px);padding:clamp(7px,2.05vw,8px) clamp(10px,3.59vw,14px)}}
+
+
+/* Narrow navigation collapses into an accessible three-line menu. */
+.menu-toggle{display:none}@media(max-width:700px){.menu-toggle{display:flex;position:relative;z-index:2;width:40px;height:40px;padding:10px 8px;flex-direction:column;justify-content:center;gap:5px;border:1px solid #ffffff80;border-radius:50%;background:#17171dcc;color:#fff;cursor:pointer}.menu-toggle span{display:block;width:100%;height:2px;border-radius:2px;background:currentColor;transition:transform .2s ease,opacity .2s ease}.menu-toggle[aria-expanded="true"] span:first-child{transform:translateY(7px) rotate(45deg)}.menu-toggle[aria-expanded="true"] span:nth-child(2){opacity:0}.menu-toggle[aria-expanded="true"] span:last-child{transform:translateY(-7px) rotate(-45deg)}.top .nav{display:none;position:absolute;top:calc(100% - 4px);right:16px;min-width:180px;padding:12px;flex-direction:column;align-items:stretch;gap:4px;border:1px solid #ffffff30;border-radius:14px;background:#17171df2;box-shadow:0 12px 34px #0003}.top .nav.is-open{display:flex}.top .nav a:not(.login){display:block;padding:10px 12px;color:#fff!important;font-size:13px}.top .nav .login{display:block;margin-top:5px;text-align:center;color:#fff!important;font-size:12px;padding:10px 12px}.hero-pinned .hero-title{font-size:20px!important;max-width:calc(100vw - 78px);white-space:nowrap}.hero-pinned .hero-title-avatar{width:48px!important;height:48px!important;margin-right:8px!important}}@media(max-width:360px){.hero-pinned .hero-title{font-size:19px!important;max-width:calc(100vw - 72px)}.hero-pinned .hero-title-avatar{width:42px!important;height:42px!important;margin-right:7px!important}}
+
+@media(max-width:700px){.hero-pinned .hero-title{transform:none!important}}
+
+
+/* Hide the Selected work heading and count above the category filters. */
+.projects-head>.mono{display:none!important}
+
+
+/* Place the single-project publish action in the gap before storybook upload. */
+.upload-form.show #upload>.project-submit-slot{grid-column:1/-1;width:min(100%,320px);justify-self:center;margin:0 auto 22px}.upload-form.show #projectSubmit,.upload-form.show #cancelEdit{margin:0}
+
+
+/* A single publish control handles single and batch project uploads. */
+@keyframes publishUploadGlow{0%,100%{box-shadow:0 0 0 0 #bd168855,0 8px 18px #241f2620}50%{box-shadow:0 0 0 5px #bd16882b,0 0 22px #bd168899}}.upload-form.show #projectSubmit.has-upload:hover{animation:publishUploadGlow 1s ease-in-out infinite}.upload-form.show #projectSubmit.has-upload{transition:box-shadow .2s ease,transform .2s ease}.upload-form.show #projectSubmit.has-upload:hover{transform:translateY(-1px)}@media(prefers-reduced-motion:reduce){.upload-form.show #projectSubmit.has-upload:hover{animation:none;box-shadow:0 0 0 3px #bd168855,0 0 16px #bd168866}}
