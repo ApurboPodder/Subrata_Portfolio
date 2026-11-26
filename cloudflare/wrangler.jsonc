@@ -6,7 +6,7 @@
   "workers_dev": true,
   "vars": {
     "FIREBASE_PROJECT_ID": "subrata-portfolio-auth",
-    "ALLOWED_ORIGINS": "https://subratakumer.vercel.app"
+    "ALLOWED_ORIGINS": "https://subratakumer.vercel.app,https://subratakumer-git-cloudflare-cutover-preview-3-d-design2.vercel.app"
   },
   "d1_databases": [
     {
