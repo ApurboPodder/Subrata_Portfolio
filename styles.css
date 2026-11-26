@@ -119,6 +119,16 @@ html,body{overscroll-behavior-y:none}
 
 .discipline-name{display:grid;gap:3px}.discipline-status{font-size:11px;color:#77808d}.discipline-row.is-hidden .discipline-name{color:#7d8490}.discipline-row.is-hidden .discipline-status{color:#b35c52}.discipline-actions{display:flex;gap:7px;flex-wrap:wrap}.discipline-row button[data-toggle-discipline]{border-color:#a6b9ad;color:#246443}.discipline-row.is-hidden button[data-toggle-discipline]{border-color:#d5b8b4;color:#9a443a}
 
+/* Keep the Studio project list directly under its form, independent of the sidebar height. */
+.modal.open:not(.project-mode) .upload-form.show{grid-template-areas:"head head" "help help" "visual visual" "dashboard dashboard" "signout signout"}
+.upload-form.show>.studio-dashboard-columns{grid-area:dashboard;display:grid;grid-template-columns:minmax(0,1.12fr) minmax(360px,.88fr);align-items:start;gap:18px;min-width:0}
+.upload-form.show .studio-main-panels,.upload-form.show .studio-side-panels{display:grid;align-content:start;gap:18px;min-width:0}
+.upload-form.show .studio-main-panels>#upload{grid-area:auto;align-self:start;display:grid;gap:3px;padding:24px;background:#fff;border:1px solid #e0e4e9;border-radius:14px;box-shadow:0 4px 18px #18243b08}
+.upload-form.show .studio-main-panels>#existing{grid-area:auto;align-self:start;min-width:0;padding:22px;background:#fff;border:1px solid #e0e4e9;border-radius:14px;box-shadow:0 4px 18px #18243b08}
+.upload-form.show .studio-side-panels>.studio-settings,.upload-form.show .studio-side-panels>.discipline-manager,.upload-form.show .studio-side-panels>.studio-account{grid-area:auto;align-self:start;margin:0;padding:22px;background:#fff;border:1px solid #e0e4e9;border-radius:14px;box-shadow:0 4px 18px #18243b08}
+@media(max-width:900px){.modal.open:not(.project-mode) .upload-form.show{grid-template-columns:minmax(0,1fr);grid-template-areas:"head" "help" "visual" "dashboard" "signout"}.upload-form.show>.studio-dashboard-columns{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){.upload-form.show .studio-main-panels>#upload,.upload-form.show .studio-main-panels>#existing,.upload-form.show .studio-side-panels>.studio-settings,.upload-form.show .studio-side-panels>.discipline-manager,.upload-form.show .studio-side-panels>.studio-account{padding:17px}}
+
 .all-work-row{padding-bottom:14px;margin-bottom:5px;border-bottom:2px solid var(--line)}.all-work-row .discipline-name{font-weight:600}
 
 /* Keep each complete project image visible in its portfolio card. */
@@ -128,6 +138,8 @@ html,body{overscroll-behavior-y:none}
 .art.art-custom{aspect-ratio:auto!important;padding:0;margin:0}.card .meta{display:none!important}
 
 .batch-upload{margin:24px 0;padding:20px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.batch-upload h3{font:500 20px "Space Grotesk";letter-spacing:-.04em;margin:0 0 6px}.batch-upload>p{font-size:12px;color:var(--muted);line-height:1.55;margin:0 0 12px}.batch-upload input[type=file]{display:block;width:100%;font-size:12px;margin:10px 0}.batch-upload .submit{margin:6px 0 0}.batch-upload .batch-upload-status{min-height:1em;font-size:11px;margin:10px 0 0}
+
+.visual-editor-controls{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap}.visual-editor-lock-status{font:10px "DM Mono";color:#777;white-space:nowrap}.visual-editor-toggle{width:auto;margin:0;padding:9px 13px;border:1px solid #dfe3e9;border-radius:7px;background:#1d211d;color:#fff;font-size:12px;line-height:1;cursor:pointer}.visual-editor-toggle:hover{background:#323832}.visual-editor-toggle:focus-visible{outline:2px solid #bd1688;outline-offset:2px}.visual-editor.is-locked iframe{pointer-events:none}@media(max-width:600px){.visual-editor-controls{justify-content:flex-start;margin-top:12px}}
 
 .manage-discipline{border-bottom:1px solid var(--line)}.manage-discipline>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 4px;cursor:pointer;list-style:none;font:500 14px "Space Grotesk"}.manage-discipline>summary::-webkit-details-marker{display:none}.manage-discipline>summary:after{content:"+";order:3;color:#818780;font-size:18px}.manage-discipline[open]>summary:after{content:"−"}.manage-discipline>summary:hover{color:#bd1688}.manage-discipline-count{margin-left:auto;color:#85827f}.manage-discipline-projects{padding:0 0 12px}.manage-discipline-projects .dash-project:first-child{border-top:1px solid var(--line)}.manage-discipline-projects .empty{padding:14px 8px}
 

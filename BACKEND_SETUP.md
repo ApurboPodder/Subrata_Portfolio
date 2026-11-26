@@ -38,4 +38,5 @@ Push the code and config to GitHub to deploy through Vercel. Then sign in with t
 - Published project records and cover images are public; only the allowlisted admin can mutate them.
 - Removing a project also deletes its stored cover image.
 - Public projects, site settings, and disciplines are cached in the visitor's browser for faster repeat visits. Cached content appears immediately and refreshes from Supabase; a failed refresh leaves the last cached content visible.
+- Password recovery shows a 60-second retry countdown after a send or rate-limit response. Supabase's project-wide email quota may require a longer wait.
 - The frontend does not use a service-role key.
