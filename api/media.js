@@ -125,12 +125,14 @@ async function handleMediaDelete(request) {
   return json({ deleted: true });
 }
 
-export default async function handler(request) {
-  try {
-    if (request.method === 'POST') return await handleClientUpload(request);
-    if (request.method === 'DELETE') return await handleMediaDelete(request);
-    return json({ error: 'Method not allowed.' }, 405);
-  } catch (error) {
-    return errorResponse(error);
+export default {
+  async fetch(request) {
+    try {
+      if (request.method === 'POST') return await handleClientUpload(request);
+      if (request.method === 'DELETE') return await handleMediaDelete(request);
+      return json({ error: 'Method not allowed.' }, 405);
+    } catch (error) {
+      return errorResponse(error);
+    }
   }
-}
+};
