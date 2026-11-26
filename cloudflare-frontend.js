@@ -388,6 +388,31 @@
           return { data: { user: null, session: null }, error };
         }
       },
+      async resendVerificationEmail({ email, password }) {
+        let instance;
+        let requestError = null;
+        try {
+          instance = await initializeAuth();
+          const credential = await instance.signInWithEmailAndPassword(email, password);
+          firebaseUser = credential.user;
+          if (credential.user.emailVerified) throw new Error('This Firebase email is already verified. Sign in to Studio.');
+          await credential.user.sendEmailVerification();
+        } catch (error) {
+          requestError = error;
+        }
+        if (instance && instance.currentUser) {
+          try {
+            await instance.signOut();
+            firebaseUser = null;
+            adminVerified = false;
+          } catch (signOutError) {
+            requestError = requestError
+              ? new Error(`${requestError.message || String(requestError)} Temporary sign-in could not be cleared: ${signOutError.message}`)
+              : signOutError;
+          }
+        }
+        return { error: requestError };
+      },
       async createUserWithPassword({ email, password }) {
         let instance;
         try {

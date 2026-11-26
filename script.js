@@ -90,7 +90,7 @@ function showLogin(message='Sign in with your approved Studio account.'){
     '<div class="field"><label for="email">Email address</label><input type="email" required autocomplete="username" placeholder="you@example.com" id="email"></div>'+
     '<div class="field"><label for="password">Password</label><input type="password" required autocomplete="current-password" placeholder="••••••••" id="password"></div>'+
     '<button class="submit" '+(!portfolioClient?'disabled':'')+'>Sign in to your studio ↗</button>'+
-    (portfolioClient?'<button class="password-recovery-link" type="button" id="forgotPassword">Forgot password?</button><button class="password-recovery-link" type="button" id="createStudioAccount">First time? Create a Studio account</button>':'<p class="hint">Cloudflare backend is not configured in backend-config.js.</p>')+
+    (portfolioClient?'<button class="password-recovery-link" type="button" id="forgotPassword">Forgot password?</button><button class="password-recovery-link" type="button" id="resendVerification">Resend verification email</button><button class="password-recovery-link" type="button" id="createStudioAccount">First time? Create a Studio account</button>':'<p class="hint">Cloudflare backend is not configured in backend-config.js.</p>')+
     '</form>';
   const form=document.getElementById('signin');
   form.onsubmit=async event=>{
@@ -127,6 +127,27 @@ function showLogin(message='Sign in with your approved Studio account.'){
         }else toast(error.message||'Could not send a recovery email.')
       }finally{updatePasswordRecoveryButton()}
     }
+    const resendVerificationButton=document.getElementById('resendVerification');
+    if(resendVerificationButton)resendVerificationButton.onclick=async()=>{
+      const emailInput=document.getElementById('email'),passwordInput=document.getElementById('password');
+      if(!emailInput.reportValidity()||!passwordInput.reportValidity())return;
+      resendVerificationButton.disabled=true;
+      resendVerificationButton.textContent='Sending verification email…';
+      try{
+        const{error}=await portfolioClient.auth.resendVerificationEmail({
+          email:emailInput.value.trim(),
+          password:passwordInput.value
+        });
+        if(error)throw error;
+        toast('Verification email sent. Check your inbox and spam folder.');
+      }catch(error){
+        if(isPasswordRecoveryRateLimited(error))toast('Firebase is temporarily limiting verification emails. Try again later.');
+        else toast(error.message||'Could not resend the verification email.');
+      }finally{
+        resendVerificationButton.disabled=false;
+        resendVerificationButton.textContent='Resend verification email';
+      }
+    };
     const createAccountButton=document.getElementById('createStudioAccount');
     if(createAccountButton)createAccountButton.onclick=showAdminRegistration;
   }
