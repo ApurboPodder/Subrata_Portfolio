@@ -90,7 +90,7 @@ function showLogin(message='Sign in with your approved Studio account.'){
     '<div class="field"><label for="email">Email address</label><input type="email" required autocomplete="username" placeholder="you@example.com" id="email"></div>'+
     '<div class="field"><label for="password">Password</label><input type="password" required autocomplete="current-password" placeholder="••••••••" id="password"></div>'+
     '<button class="submit" '+(!portfolioClient?'disabled':'')+'>Sign in to your studio ↗</button>'+
-    (portfolioClient?'<button class="password-recovery-link" type="button" id="forgotPassword">Forgot password?</button><button class="password-recovery-link" type="button" id="resendVerification">Resend verification email</button><button class="password-recovery-link" type="button" id="createStudioAccount">First time? Create a Studio account</button>':'<p class="hint">Cloudflare backend is not configured in backend-config.js.</p>')+
+    (portfolioClient?'<button class="password-recovery-link" type="button" id="forgotPassword">Forgot password?</button><button class="password-recovery-link" type="button" id="resendVerification">Resend verification email</button>':'<p class="hint">Cloudflare backend is not configured in backend-config.js.</p>')+
     '</form>';
   const form=document.getElementById('signin');
   form.onsubmit=async event=>{
@@ -148,27 +148,6 @@ function showLogin(message='Sign in with your approved Studio account.'){
         resendVerificationButton.textContent='Resend verification email';
       }
     };
-    const createAccountButton=document.getElementById('createStudioAccount');
-    if(createAccountButton)createAccountButton.onclick=showAdminRegistration;
-  }
-  function showAdminRegistration(){
-    editingProjectId=null;
-    content.innerHTML='<form class="signin-form" id="studioRegistration"><h2>Set up Studio access.</h2><p>Use an email already approved for Studio. Verify your email before signing in.</p><div class="field"><label for="registrationEmail">Email address</label><input type="email" id="registrationEmail" required autocomplete="email" placeholder="you@example.com"></div><div class="field"><label for="registrationPassword">Password</label><input type="password" id="registrationPassword" required minlength="8" autocomplete="new-password"></div><div class="field"><label for="registrationPasswordConfirm">Confirm password</label><input type="password" id="registrationPasswordConfirm" required minlength="8" autocomplete="new-password"></div><button class="submit">Create account</button></form><button class="password-recovery-link" type="button" id="backToSignIn">Back to sign in</button>';
-    const form=document.getElementById('studioRegistration'),button=form.querySelector('.submit');
-    form.onsubmit=async event=>{
-      event.preventDefault();
-      const password=document.getElementById('registrationPassword').value,confirmation=document.getElementById('registrationPasswordConfirm').value;
-      if(password!==confirmation){toast('The passwords do not match.');return}
-      button.disabled=true;
-      button.textContent='Creating account…';
-      const{error}=await portfolioClient.auth.createUserWithPassword({
-        email:document.getElementById('registrationEmail').value.trim(),
-        password
-      });
-      if(error){toast(error.message||'Could not create the account.');button.disabled=false;button.textContent='Create account';return}
-      showLogin('Check your email to verify your Firebase account. Only approved Studio emails can sign in.');
-    };
-    document.getElementById('backToSignIn').onclick=()=>showLogin();
   }
 }
 function showPasswordReset(){editingProjectId=null;modal.classList.remove('project-mode');modal.classList.add('open');content.innerHTML='<form class="signin-form" id="passwordReset"><h2>Reset your password.</h2><p>Choose a new password for your Studio account.</p><div class="field"><label for="resetPassword">New password</label><input type="password" id="resetPassword" required minlength="8" autocomplete="new-password"></div><div class="field"><label for="confirmResetPassword">Confirm new password</label><input type="password" id="confirmResetPassword" required minlength="8" autocomplete="new-password"></div><button class="submit">Save new password</button></form>';const form=document.getElementById('passwordReset'),button=form.querySelector('.submit');form.onsubmit=async event=>{event.preventDefault();const password=document.getElementById('resetPassword').value,confirmation=document.getElementById('confirmResetPassword').value;if(password!==confirmation){toast('The new passwords do not match.');return}button.disabled=true;button.textContent='Saving…';try{const resetCode=new URLSearchParams(location.search).get('oobCode');if(!resetCode)throw new Error('This password reset link is invalid or expired.');const{error}=await portfolioClient.auth.confirmPasswordReset(resetCode,password);if(error)throw error}catch(error){toast(error.message||'Could not reset the password.');button.disabled=false;button.textContent='Save new password';return}passwordRecoveryPending=false;form.reset();history.replaceState(null,'',location.pathname+location.hash);showLogin('Your password has been reset. Sign in with your new password.');try{const{error}=await portfolioClient.auth.signOut();if(error)throw error;toast('Password reset. Sign in with your new password.')}catch(error){toast('Your password was reset, but the recovery session could not be ended: '+error.message)}}}

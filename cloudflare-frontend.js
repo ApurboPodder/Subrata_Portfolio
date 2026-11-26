@@ -413,30 +413,6 @@
         }
         return { error: requestError };
       },
-      async createUserWithPassword({ email, password }) {
-        let instance;
-        try {
-          instance = await initializeAuth();
-          const credential = await instance.createUserWithEmailAndPassword(email, password);
-          firebaseUser = credential.user;
-          await credential.user.sendEmailVerification();
-          await instance.signOut();
-          firebaseUser = null;
-          adminVerified = false;
-          return { data: { user: normalizeUser(credential.user) }, error: null };
-        } catch (error) {
-          if (instance && instance.currentUser) {
-            try {
-              await instance.signOut();
-              firebaseUser = null;
-              adminVerified = false;
-            } catch (signOutError) {
-              error = new Error(`${error.message} The new sign-in session could not be cleared: ${signOutError.message}`);
-            }
-          }
-          return { data: null, error };
-        }
-      },
       async signOut() {
         try {
           const instance = await initializeAuth();

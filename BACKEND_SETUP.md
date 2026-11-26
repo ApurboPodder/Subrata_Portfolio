@@ -9,7 +9,7 @@ The production site uses Firebase Authentication for Studio sign-in, Cloudflare 
 - Vercel Blob upload and delete routes: `api/`.
 - Firebase browser adapter: `cloudflare-frontend.js`.
 - Cloudflare API details and deployment instructions: `cloudflare/README.md`.
-- Studio access: use an allowlisted Firebase email and verify it before signing in. The login form can resend the verification email after you enter your email and password.
+- Studio access: Firebase accounts are provisioned by the project owner and must use an allowlisted email. Verify the email before signing in; the login form can resend the verification email after you enter your email and password.
 
 The Worker URL and Firebase web-app configuration are public client settings. Keep Blob tokens, migration tokens, and Firebase service-account credentials out of source control.
 
