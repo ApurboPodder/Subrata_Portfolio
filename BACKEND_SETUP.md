@@ -27,7 +27,7 @@ Never place a service-role or secret key in this file. The publishable key is br
 
 ## 5. Set the production URL
 
-In Supabase Authentication > URL Configuration, set the Site URL to your Vercel site and add the Vercel URL to allowed redirect URLs.
+In Supabase Authentication > URL Configuration, set the Site URL to your Vercel site and add the Vercel URL to allowed redirect URLs. The Studio forgot-password flow redirects back to the current page, so make sure the deployed page URL is allowed.
 
 Push the code and config to GitHub to deploy through Vercel. Then sign in with the account created above. Existing sample projects are seeded in the database; project additions, edits, removals, and images are shared by the live site.
 
