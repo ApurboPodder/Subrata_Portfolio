@@ -1,6 +1,6 @@
 # Cloudflare data backend with Vercel Blob
 
-The Cloudflare Worker and D1 database are a migration scaffold. The live frontend still uses Supabase; this change does not switch production traffic or remove the Supabase implementation.
+The cutover preview frontend uses Cloudflare Workers and D1 with Firebase Authentication and Vercel Blob media storage. Production stays on the existing Supabase backend until data and media are imported and the Preview deployment passes end-to-end checks. Keep Supabase available as the rollback source until production cutover is confirmed.
 
 ## Components
 
@@ -60,8 +60,8 @@ The Vercel route verifies Studio authorization through the Worker before issuing
 2. Set `CLOUDFLARE_API_URL` in the Vercel project’s Production and Preview environments to the deployed Worker HTTPS origin (for example, its `workers.dev` URL).
 3. Configure `FIREBASE_PROJECT_ID`, `ALLOWED_ORIGINS`, and the D1 database ID in `wrangler.jsonc`. The Worker requires no R2 bucket.
 4. Configure the Firebase web app for the existing Vercel hostname and enable email/password sign-in. Add only explicitly approved email addresses to `portfolio_admins` in D1; an allowlisted address can access Studio after Firebase sign-in.
-5. Apply any new migrations and deploy the Worker and Vercel project. Keep the production frontend pointed at Supabase until the Worker, data, media, and admin flows have been verified.
+5. Apply migrations and deploy the Worker and Vercel Preview. Configure the exact Preview origin in `ALLOWED_ORIGINS` before testing browser API requests. Keep production on Supabase until imported data, media, authentication, and Studio flows have been verified.
 
 Vercel Blob Hobby currently includes 1 GB storage, 10 GB monthly data transfer, 10,000 simple operations, and 2,000 advanced operations. Hobby usage does not incur overage charges, but Blob access can stop until 30 days have passed after a quota is exceeded. Review the current [Blob usage and pricing](https://vercel.com/docs/vercel-blob/usage-and-pricing) before production use.
 
-D1 migration `0001_initial.sql` has been applied to the remote database, and the Worker has been deployed and checked. Two explicitly approved Studio email addresses are allowlisted in D1. `CLOUDFLARE_API_URL` is configured in Vercel Production and Preview. The frontend adapter is implemented in `cloudflare-frontend.js` and is loaded by `index.html`, but `provider` remains `supabase`; the production site continues to use Supabase. D1 currently has no imported portfolio records. Supabase export, production data import, media transfer, deployment and end-to-end testing of the Vercel Functions, and frontend cutover are still pending. The existing `moved.html` and `vercel.json` files are unrelated and remain untouched.
+D1 migration `0001_initial.sql` has been applied and the Worker deployed. Two approved Studio email addresses are allowlisted in D1, and `CLOUDFLARE_API_URL` is configured in Vercel Production and Preview. The cutover branch sets the frontend provider to `cloudflare`; production is unchanged until that branch is released. The D1 portfolio records and Blob media still need importing, and the Vercel Preview API routes and Firebase/Studio flows still need end-to-end verification. Temporary migration endpoints and credentials must be removed after a verified import. The existing `moved.html` and `vercel.json` files are unrelated and remain untouched.

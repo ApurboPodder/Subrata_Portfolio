@@ -1,8 +1,6 @@
 // Public client settings only; never put service-account or other private credentials here.
 window.PORTFOLIO_BACKEND = {
-  provider: 'supabase',
-  url: 'https://sgjwzxesfsaqgvxdfxey.supabase.co',
-  publishableKey: 'sb_publishable_4DZi9zxVmwgJu0kAp1TgeQ_kH_MSva9',
+  provider: 'cloudflare',
   siteUrl: 'https://subratakumer.vercel.app/',
   cloudflareApiUrl: 'https://subrata-portfolio-api.apurbo-podder26.workers.dev',
   firebase: {
