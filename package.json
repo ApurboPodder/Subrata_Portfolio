@@ -1,0 +1,15 @@
+{
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "overrides": {
+    "@vercel/cli-config": {
+      "zod": "^4.6.6"
+    }
+  },
+  "dependencies": {
+    "@vercel/blob": "^2.9.0"
+  }
+}
