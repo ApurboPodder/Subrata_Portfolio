@@ -25,8 +25,7 @@ function parseUploadPayload(value) {
   if (
     !payload ||
     typeof payload !== 'object' ||
-    (typeof payload.firebaseIdToken !== 'string' && typeof payload.migrationToken !== 'string') ||
-    Boolean(payload.firebaseIdToken) === Boolean(payload.migrationToken) ||
+    typeof payload.firebaseIdToken !== 'string' ||
     (payload.kind !== 'image' && payload.kind !== 'model') ||
     typeof payload.contentType !== 'string'
   ) {
@@ -66,18 +65,11 @@ async function authorizeUpload(pathname, clientPayload) {
     throw new ApiError(400, 'A project ID is required for a model upload.');
   }
 
-  if (payload.migrationToken) {
-    if (payload.kind !== 'image' || payload.projectId) {
-      throw new ApiError(400, 'Migration uploads must be unattached image files.');
-    }
-    await cloudflareRequest('/api/migration/verify', payload.migrationToken, { method: 'POST', body: {} });
-  } else {
-    await cloudflareRequest('/api/admin/me', payload.firebaseIdToken);
-    if (payload.projectId) {
-      const projects = await cloudflareRequest('/api/admin/projects', payload.firebaseIdToken);
-      if (!projects.some(project => project.id === payload.projectId)) {
-        throw new ApiError(404, 'Project not found.');
-      }
+  await cloudflareRequest('/api/admin/me', payload.firebaseIdToken);
+  if (payload.projectId) {
+    const projects = await cloudflareRequest('/api/admin/projects', payload.firebaseIdToken);
+    if (!projects.some(project => project.id === payload.projectId)) {
+      throw new ApiError(404, 'Project not found.');
     }
   }
 
@@ -92,10 +84,6 @@ async function authorizeUpload(pathname, clientPayload) {
 
 async function registerCompletedUpload(blob, tokenPayload) {
   const payload = parseUploadPayload(tokenPayload);
-  if (payload.migrationToken) {
-    await cloudflareRequest('/api/migration/verify', payload.migrationToken, { method: 'POST', body: {} });
-    return;
-  }
   await cloudflareRequest('/api/admin/media', payload.firebaseIdToken, {
     method: 'POST',
     body: {

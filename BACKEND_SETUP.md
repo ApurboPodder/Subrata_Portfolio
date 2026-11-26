@@ -14,6 +14,6 @@ The Worker URL and Firebase web-app configuration are public client settings. Ke
 
 ## Migration and rollback
 
-The Supabase project and `supabase/` SQL files are retained as the source and rollback copy while the Cloudflare preview is being tested. Do not delete the Supabase project or its files as part of this migration. The one-time migration runner is `scripts/migrate-supabase-data.mjs`; it requires the existing Supabase public URL/key and temporary migration authorization, and it transfers portfolio records and media into D1 and Vercel Blob.
+The project and discipline records, descriptions, and editable site content have been imported into D1. Media transfer was skipped at the user's request; existing image references were cleared and those assets must be uploaded through Studio before production cutover. The Supabase project and `supabase/` SQL files are retained as the source and rollback copy. Do not delete them until the Cloudflare production cutover and manual media uploads are verified.
 
 Do not switch production traffic until the imported record/media counts match the source and the public portfolio, Studio authentication, editing, uploads, and deletion flows pass on the Vercel Preview deployment.

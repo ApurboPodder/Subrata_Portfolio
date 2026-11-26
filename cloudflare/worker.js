@@ -206,7 +206,7 @@ function validateId(value) {
 }
 
 function validateSlug(value) {
-  if (typeof value !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value) || value.length > 120) {
+  if (typeof value !== 'string' || !/^-?[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value) || value.length > 120) {
     fail(400, 'Slug must contain lowercase letters, numbers, and single hyphens.');
   }
   return value;
@@ -256,166 +256,6 @@ function validateProject(input, partial = false) {
   if (!partial && !('is_published' in data)) data.is_published = 1;
   if (!partial && !('is_featured' in data)) data.is_featured = 0;
   return data;
-}
-
-function migrationTokenMatches(request, env) {
-  const expected = env.PORTFOLIO_MIGRATION_TOKEN;
-  const match = request.headers.get('authorization')?.match(/^Bearer\s+(.+)$/i);
-  if (!expected || !match || match[1].length !== expected.length) return false;
-  let mismatch = 0;
-  for (let index = 0; index < expected.length; index += 1) {
-    mismatch |= match[1].charCodeAt(index) ^ expected.charCodeAt(index);
-  }
-  return mismatch === 0;
-}
-
-function requireMigrationToken(request, env) {
-  if (!migrationTokenMatches(request, env)) fail(401, 'A valid migration token is required.');
-}
-
-function validateMigrationTimestamp(value, field) {
-  if (typeof value !== 'string' || value.length > 64 || !Number.isFinite(Date.parse(value))) {
-    fail(400, `${field} must be a valid timestamp.`);
-  }
-  return value;
-}
-
-async function importPortfolio(request, env) {
-  const input = await readJson(request);
-  if (
-    !input ||
-    !Array.isArray(input.projects) ||
-    !Array.isArray(input.disciplines) ||
-    !input.settings ||
-    typeof input.settings !== 'object' ||
-    input.projects.length > 1000 ||
-    input.disciplines.length > 200
-  ) {
-    fail(400, 'The migration payload is incomplete or too large.');
-  }
-
-  const current = await env.DB.prepare(
-    'SELECT (SELECT COUNT(*) FROM projects) AS projects, (SELECT COUNT(*) FROM portfolio_disciplines) AS disciplines'
-  ).first();
-  if (current.projects || current.disciplines) {
-    fail(409, 'Portfolio data can only be imported into an empty D1 database.');
-  }
-
-  const projectIds = new Set();
-  const slugs = new Set();
-  const projects = input.projects.map(row => {
-    if (!row || typeof row !== 'object' || Array.isArray(row)) fail(400, 'Invalid project in migration payload.');
-    const allowed = new Set([...PROJECT_COLUMNS, 'id', 'created_at', 'updated_at']);
-    if (Object.keys(row).some(key => !allowed.has(key))) fail(400, 'Unsupported project field in migration payload.');
-    const id = validateId(row.id);
-    if (projectIds.has(id)) fail(400, 'Duplicate project ID in migration payload.');
-    projectIds.add(id);
-    const project = validateProject({
-      slug: row.slug,
-      title: row.title,
-      category: row.category,
-      year: row.year,
-      description: row.description,
-      art_key: row.art_key ?? null,
-      cover_path: row.cover_path ?? null,
-      is_published: row.is_published,
-      sort_order: row.sort_order,
-      is_featured: row.is_featured ?? false
-    });
-    if (slugs.has(project.slug)) fail(400, 'Duplicate project slug in migration payload.');
-    slugs.add(project.slug);
-    return {
-      ...project,
-      id,
-      created_at: validateMigrationTimestamp(row.created_at, 'Project created_at'),
-      updated_at: validateMigrationTimestamp(row.updated_at, 'Project updated_at')
-    };
-  });
-
-  const disciplineIds = new Set();
-  const disciplineNames = new Set();
-  const disciplines = input.disciplines.map(row => {
-    if (!row || typeof row !== 'object' || Array.isArray(row)) fail(400, 'Invalid discipline in migration payload.');
-    const allowed = new Set([...DISCIPLINE_COLUMNS, 'id', 'created_at']);
-    if (Object.keys(row).some(key => !allowed.has(key))) fail(400, 'Unsupported discipline field in migration payload.');
-    const id = validateId(row.id);
-    if (disciplineIds.has(id)) fail(400, 'Duplicate discipline ID in migration payload.');
-    disciplineIds.add(id);
-    const discipline = validateDiscipline({
-      name: row.name,
-      parent_id: row.parent_id ?? null,
-      sort_order: row.sort_order,
-      is_visible: row.is_visible
-    });
-    const normalizedName = discipline.name.toLowerCase();
-    if (disciplineNames.has(normalizedName)) fail(400, 'Duplicate discipline name in migration payload.');
-    disciplineNames.add(normalizedName);
-    return {
-      ...discipline,
-      id,
-      created_at: validateMigrationTimestamp(row.created_at, 'Discipline created_at')
-    };
-  });
-  for (const discipline of disciplines) {
-    if (discipline.parent_id && !disciplineIds.has(discipline.parent_id)) {
-      fail(400, 'A discipline parent is missing from the migration payload.');
-    }
-    if (discipline.parent_id === discipline.id) fail(400, 'A discipline cannot be its own parent.');
-  }
-
-  const settings = input.settings;
-  const portraitPath = settings.portrait_path === null ? null : validateBlobUrl(settings.portrait_path);
-  const heroCoverPath = settings.hero_cover_path === null ? null : validateBlobUrl(settings.hero_cover_path);
-  if (typeof settings.show_all_work !== 'boolean') fail(400, 'show_all_work must be a boolean.');
-  if (!settings.site_content || typeof settings.site_content !== 'object' || Array.isArray(settings.site_content)) {
-    fail(400, 'site_content must be an object.');
-  }
-  const settingsUpdatedAt = validateMigrationTimestamp(settings.updated_at, 'Settings updated_at');
-
-  const statements = [];
-  for (const discipline of disciplines.sort((left, right) => Number(Boolean(left.parent_id)) - Number(Boolean(right.parent_id)))) {
-    statements.push(env.DB.prepare(
-      'INSERT INTO portfolio_disciplines (id, name, parent_id, sort_order, is_visible, created_at) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET name = excluded.name, parent_id = excluded.parent_id, sort_order = excluded.sort_order, is_visible = excluded.is_visible, created_at = excluded.created_at'
-    ).bind(
-      discipline.id,
-      discipline.name,
-      discipline.parent_id,
-      discipline.sort_order,
-      discipline.is_visible,
-      discipline.created_at
-    ));
-  }
-  for (const project of projects) {
-    statements.push(env.DB.prepare(
-      'INSERT INTO projects (id, slug, title, category, year, description, art_key, cover_path, is_published, sort_order, is_featured, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET slug = excluded.slug, title = excluded.title, category = excluded.category, year = excluded.year, description = excluded.description, art_key = excluded.art_key, cover_path = excluded.cover_path, is_published = excluded.is_published, sort_order = excluded.sort_order, is_featured = excluded.is_featured, created_at = excluded.created_at, updated_at = excluded.updated_at'
-    ).bind(
-      project.id,
-      project.slug,
-      project.title,
-      project.category,
-      project.year,
-      project.description,
-      project.art_key,
-      project.cover_path,
-      project.is_published,
-      project.sort_order,
-      project.is_featured,
-      project.created_at,
-      project.updated_at
-    ));
-  }
-  statements.push(env.DB.prepare(
-    'UPDATE portfolio_settings SET portrait_path = ?, hero_cover_path = ?, show_all_work = ?, site_content = ?, updated_at = ? WHERE id = 1'
-  ).bind(
-    portraitPath,
-    heroCoverPath,
-    Number(settings.show_all_work),
-    JSON.stringify(settings.site_content),
-    settingsUpdatedAt
-  ));
-  await env.DB.batch(statements);
-
-  return json({ imported: { projects: projects.length, disciplines: disciplines.length, settings: 1 } });
 }
 
 function validateDiscipline(input, partial = false) {
@@ -562,15 +402,6 @@ async function handleRequest(request, env) {
   const method = request.method.toUpperCase();
 
   if (method === 'OPTIONS') return new Response(null, { status: 204 });
-  if (path === '/api/migration/verify' && method === 'POST') {
-    requireMigrationToken(request, env);
-    return json({ authorized: true });
-  }
-  if (path === '/api/migration/import' && method === 'POST') {
-    requireMigrationToken(request, env);
-    return importPortfolio(request, env);
-  }
-
   const identity = await identityFor(request, env);
   const isAdmin = Boolean(identity?.isAdmin);
 
