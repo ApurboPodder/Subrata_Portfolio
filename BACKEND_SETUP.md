@@ -1,6 +1,6 @@
 # Portfolio backend
 
-The Cloudflare cutover preview uses Firebase Authentication for Studio sign-in, Cloudflare Workers and D1 for the API and portfolio records, and Vercel Blob for image and model files. The production site remains on the existing backend until data transfer and preview verification are complete.
+The production site uses Firebase Authentication for Studio sign-in, Cloudflare Workers and D1 for the API and portfolio records, and Vercel Blob for image and model files. The frontend no longer loads or calls Supabase.
 
 ## Current setup
 
@@ -14,6 +14,8 @@ The Worker URL and Firebase web-app configuration are public client settings. Ke
 
 ## Migration and rollback
 
-The project and discipline records, descriptions, and editable site content have been imported into D1. Media transfer was skipped at the user's request; existing image references were cleared and those assets must be uploaded through Studio before production cutover. The Supabase project and `supabase/` SQL files are retained as the source and rollback copy. Do not delete them until the Cloudflare production cutover and manual media uploads are verified.
+All 107 published project records, 11 disciplines, and editable text/settings content were imported into D1 and verified. Media transfer was skipped at the user's request, so image and model files must be uploaded manually through Studio; the imported records have no old Supabase media references. Until then, those portfolio visuals will be absent.
 
-Do not switch production traffic until the imported record/media counts match the source and the public portfolio, Studio authentication, editing, uploads, and deletion flows pass on the Vercel Preview deployment.
+Production has been cut over to Cloudflare. The public Preview loaded the imported portfolio content and discipline filters, and the Studio sign-in dialog rendered. Firebase sign-in, Studio editing, media uploads, and deletion cleanup have not yet been end-to-end tested. Complete those checks and the manual uploads before considering the migration fully verified.
+
+The Supabase project and `supabase/` SQL files are intentionally retained unchanged as a rollback source. Do not delete them until the Cloudflare deployment and manual media uploads are verified.
