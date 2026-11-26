@@ -4,7 +4,7 @@ window.PORTFOLIO_BACKEND = {
   siteUrl: 'https://subratakumer.vercel.app/',
   cloudflareApiUrl: 'https://subrata-portfolio-api.apurbo-podder26.workers.dev',
   firebase: {
-    apiKey: 'AIzaSyCxpd00i2JNo0sFdZ0haXhCH6oOupVj0m0',
+    apiKey: 'AIzaSyCxpdO0i2JNo0sFdZOhaXhCH6oOupVjOm0',
     authDomain: 'subrata-portfolio-auth.firebaseapp.com',
     projectId: 'subrata-portfolio-auth',
     storageBucket: 'subrata-portfolio-auth.firebasestorage.app',
