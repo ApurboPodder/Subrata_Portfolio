@@ -36,4 +36,5 @@ Push the code and config to GitHub to deploy through Vercel. Then sign in with t
 - Cover images are limited to 8 MB and JPEG, PNG, WebP, or GIF.
 - Published project records and cover images are public; only the allowlisted admin can mutate them.
 - Removing a project also deletes its stored cover image.
+- Public projects, site settings, and disciplines are cached in the visitor's browser for faster repeat visits. Cached content appears immediately and refreshes from Supabase; a failed refresh leaves the last cached content visible.
 - The frontend does not use a service-role key.
