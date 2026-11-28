@@ -13,6 +13,16 @@
     } catch {
       throw new Error('The Cloudflare API URL must be a valid HTTPS origin.');
     }
+    let blobPublicOrigin;
+    try {
+      const blobUrl = new URL(config.blobPublicOrigin);
+      if (blobUrl.protocol !== 'https:' || !blobUrl.hostname.endsWith('.public.blob.vercel-storage.com')) {
+        throw new Error();
+      }
+      blobPublicOrigin = blobUrl.origin;
+    } catch {
+      throw new Error('The public Blob URL must be a valid Vercel Blob HTTPS origin.');
+    }
 
     let firebaseAuth = null;
     let firebaseLoadPromise = null;
@@ -330,7 +340,11 @@
       from() {
         return {
           getPublicUrl(path) {
-            return { data: { publicUrl: String(path || '') } };
+            const value = String(path || '');
+            const publicUrl = value && !/^https?:\/\//i.test(value)
+              ? new URL(encodeURIComponent(value), `${blobPublicOrigin}/`).toString()
+              : value;
+            return { data: { publicUrl } };
           },
           async upload(path, file, options) {
             try {

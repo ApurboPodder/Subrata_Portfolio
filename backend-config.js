@@ -3,6 +3,7 @@ window.PORTFOLIO_BACKEND = {
   provider: 'cloudflare',
   siteUrl: 'https://subratakumer.vercel.app/',
   cloudflareApiUrl: 'https://subrata-portfolio-api.apurbo-podder26.workers.dev',
+  blobPublicOrigin: 'https://fvtccskalqlfwaab.public.blob.vercel-storage.com',
   firebase: {
     apiKey: 'AIzaSyCxpdO0i2JNo0sFdZOhaXhCH6oOupVjOm0',
     authDomain: 'subrata-portfolio-auth.firebaseapp.com',
